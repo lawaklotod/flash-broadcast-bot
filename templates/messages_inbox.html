@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <h2 class="mb-4"><i class="bi bi-inbox"></i> Pesan Masuk (Inbox)</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Pesan</th>
+                        <th>Waktu</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for msg in messages %}
+                    <tr class="{{ '' if msg[5] else 'table-active' }}">
+                        <td>
+                            <strong>@{{ msg[2] }}</strong><br>
+                            <small class="text-muted">ID: {{ msg[1] }}</small>
+                        </td>
+                        <td>{{ msg[3] }}</td>
+                        <td><small>{{ msg[4] }}</small></td>
+                        <td>
+                            {% if msg[5] %}
+                                <span class="badge bg-success">Dibaca</span>
+                            {% else %}
+                                <span class="badge bg-warning">Baru</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

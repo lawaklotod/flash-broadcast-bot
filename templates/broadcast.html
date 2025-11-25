@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Broadcast{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <h2 class="mb-4"><i class="bi bi-broadcast"></i> Eksekusi Broadcast</h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Pilih Pesan untuk Di-Broadcast</h5>
+                </div>
+                <div class="card-body">
+                    <div id="messagesList">
+                        {% for msg in messages %}
+                        <div class="message-item mb-3 p-3 border rounded" onclick="selectMessage({{ msg[0] }}, '{{ msg[1] }}')">
+                            <h6>{{ msg[1] }}</h6>
+                            <small class="text-muted">{{ msg[2] }} • {{ msg[3] }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Ringkasan Broadcast</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Pesan Terpilih</label>
+                        <input type="text" class="form-control" id="selectedMessage" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jumlah Grup Target</label>
+                        <input type="text" class="form-control" id="groupCount" disabled>
+                    </div>
+                    <button class="btn btn-success w-100" id="broadcastBtn" onclick="executeBroadcast()" disabled>
+                        <i class="bi bi-lightning-charge"></i> Broadcast Sekarang
+                    </button>
+                </div>
+            </div>
+
+            <div class="card mt-3" id="resultCard" style="display:none;">
+                <div class="card-body">
+                    <h6>Hasil Broadcast</h6>
+                    <p>Total: <strong id="totalSent">0</strong></p>
+                    <p>Sukses: <span class="badge bg-success" id="successCount">0</span></p>
+                    <p>Gagal: <span class="badge bg-danger" id="failedCount">0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedMessageId = null;
+let groupCount = 0;
+
+fetch('/api/groups/list').then(r => r.json()).then(groups => {
+    groupCount = groups.length;
+    document.getElementById('groupCount').value = groupCount;
+});
+
+function selectMessage(msgId, msgTitle) {
+    selectedMessageId = msgId;
+    document.getElementById('selectedMessage').value = msgTitle;
+    document.getElementById('broadcastBtn').disabled = false;
+}
+
+async function executeBroadcast() {
+    if (!confirm('Yakin akan broadcast ke ' + groupCount + ' grup?')) return;
+    
+    document.getElementById('broadcastBtn').disabled = true;
+    document.getElementById('broadcastBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sedang broadcast...';
+    
+    const response = await fetch('/api/broadcast/execute', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message_id: selectedMessageId})
+    });
+    
+    const result = await response.json();
+    
+    document.getElementById('totalSent').textContent = result.total;
+    document.getElementById('successCount').textContent = result.success_count;
+    document.getElementById('failedCount').textContent = result.failed_count;
+    document.getElementById('resultCard').style.display = 'block';
+    
+    document.getElementById('broadcastBtn').disabled = false;
+    document.getElementById('broadcastBtn').innerHTML = '<i class="bi bi-lightning-charge"></i> Broadcast Sekarang';
+    
+    showToast('Broadcast selesai!');
+}
+</script>
+{% endblock %}
